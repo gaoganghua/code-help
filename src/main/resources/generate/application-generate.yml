@@ -1,0 +1,11 @@
+generatebean:
+  generateType: list
+  className: ""
+
+template-bean:
+  assignValue:
+    - 11
+    - 22
+    - 33
+  targetDir:
+    /Users/chancelee/Desktop

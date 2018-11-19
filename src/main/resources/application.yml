@@ -1,3 +1,8 @@
-person:
-  name: ggh
-  age: 23
+server:
+  port: 8085
+
+
+#logging:
+#  level: debug
+#  pattern:
+#    console: %d{yyyy-MM-dd HH:mm:ss.SSS} [%-10thread] %-5level %logger{50} - %msg%n

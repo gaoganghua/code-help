@@ -1,0 +1,18 @@
+hikari:
+  drivername: com.mysql.jdbc.Driver
+  username: root
+  password: 0.123abc
+  url: jdbc:mysql://192.168.1.114:3306/basisdata_minterm?useUnicode=true&characterEncoding=UTF-8
+
+tablemapping:
+  beanDefines:
+    #如果List里面是对象类型需要加空格
+    - tabName: t_debit_yxb_risk_info
+      beanName: RiskInfo
+    - tabName: t_debit_yxb_contacts_info
+      beanName: ContactsInfo
+  daoPackage: com.gxb.basisdata.minterm.debit.dao
+  beanPackage: com.gxb.bean
+
+
+
