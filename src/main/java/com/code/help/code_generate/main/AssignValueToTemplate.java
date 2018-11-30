@@ -45,7 +45,8 @@ public class AssignValueToTemplate {
                     FileChannel fileChannel = fis.getChannel();
                     ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
 
-                    FileOutputStream fos = new FileOutputStream(FileUtils.getFileByDirAndName(templateBean.getTargetDir(), assignValue+".txt"));
+                    String filename = assignValue+(StringUtils.isEmpty(templateBean.getSuffixName())?"":templateBean.getSuffixName());
+                    FileOutputStream fos = new FileOutputStream(FileUtils.getFileByDirAndName(templateBean.getTargetDir(), filename+".java"));
                     FileChannel outChannel = fos.getChannel();
 
                     while(true) {
@@ -55,6 +56,7 @@ public class AssignValueToTemplate {
                         }
                         String readStr = BufferUtils.getStringByBufferNew(byteBuffer);
                         readStr = readStr.replace("#{value}", assignValue);
+                        readStr = readStr.replace("#{value_name}", getObjName(assignValue));
                         logger.info("replace string:{}", readStr);
                         byteBuffer = BufferUtils.getBufferByString(readStr);
 
@@ -76,6 +78,12 @@ public class AssignValueToTemplate {
 
     }
 
+    private String getObjName(String value){
+        StringBuffer objName = new StringBuffer();
+        objName.append(String.valueOf(value.charAt(0)).toLowerCase());
+        objName.append(value.substring(1));
+        return objName.toString();
+    }
     /**
      * @deprecated
      */

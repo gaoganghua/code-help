@@ -12,6 +12,7 @@ import java.util.List;
 public class TemplateBean {
     private String fileName;
     private List<String> assignValue;
+    private String suffixName;
     private String targetDir;
 
     public String getFileName() {
@@ -36,6 +37,14 @@ public class TemplateBean {
 
     public void setTargetDir(String targetDir) {
         this.targetDir = targetDir;
+    }
+
+    public String getSuffixName() {
+        return suffixName;
+    }
+
+    public void setSuffixName(String suffixName) {
+        this.suffixName = suffixName;
     }
 
     @Override

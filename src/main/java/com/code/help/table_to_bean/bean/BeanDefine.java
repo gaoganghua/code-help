@@ -17,7 +17,7 @@ public class BeanDefine {
 
     private Boolean insert = true;
 
-    private Boolean insertRecords = true;
+    private Boolean insertRecords = false;
 
     private Boolean update = true;
 

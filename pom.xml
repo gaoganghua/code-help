@@ -51,10 +51,50 @@
             <version>3.1.0</version>
         </dependency>
 
+        <!--akka-->
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-actor_2.10</artifactId>
+            <version>2.3.6</version>
+        </dependency>
 
+        <!--webdriver-->
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>3.12.0</version>
+        </dependency>
+
+        <!--xpath-->
+        <dependency>
+            <groupId>jaxen</groupId>
+            <artifactId>jaxen</artifactId>
+            <version>1.1.6</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.6</version>
+        </dependency>
 
     </dependencies>
 
+    <dependencyManagement>
+        <dependencies>
+            <!--<dependency>-->
+            <!--<groupId>com.opera</groupId>-->
+            <!--<artifactId>operadriver</artifactId>-->
+            <!--<version>0.16</version>-->
+            <!--&lt;!&ndash;<exclusions>&ndash;&gt;-->
+            <!--&lt;!&ndash;<exclusion>&ndash;&gt;-->
+            <!--&lt;!&ndash;<groupId>org.seleniumhq.selenium</groupId>&ndash;&gt;-->
+            <!--&lt;!&ndash;<artifactId>selenium-remote-driver</artifactId>&ndash;&gt;-->
+            <!--&lt;!&ndash;</exclusion>&ndash;&gt;-->
+            <!--&lt;!&ndash;</exclusions>&ndash;&gt;-->
+            <!--</dependency>-->
+        </dependencies>
+    </dependencyManagement>
 
 
     <build>

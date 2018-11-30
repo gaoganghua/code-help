@@ -15,7 +15,7 @@ public class HelpApplication {
      */
     @Bean
     public static PropertySourcesPlaceholderConfigurer properties() {
-        String[] path = {"generate/application-generate.yml", "tabletobean/application-datasource.yml"};
+        String[] path = {"generate/application-generate.yml", "tabletobean/application-datasource.yml", "parsefile/application-parse.yml"};
         ClassPathResource[] resources = new ClassPathResource[path.length];
 
         for(int i=0;i<path.length;i++){

@@ -9,10 +9,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.sql.DataSource;
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Field;
-import java.nio.ByteBuffer;
-import java.nio.channels.Channel;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -59,12 +60,21 @@ public class GenerateCode {
 
         StringBuilder mapperBuilder = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         mapperBuilder.append("<!DOCTYPE mapper PUBLIC \"-//mybatis.org//DTD Mapper 3.0//EN\" \"http://mybatis.org/dtd/mybatis-3-mapper.dtd\">\n");
-        mapperBuilder.append("<mapper namespace=\""+daoPackage+beanDefine.getBeanName()+"Dao\">\n\n");
+        mapperBuilder.append("<mapper namespace=\""+daoPackage+"."+beanDefine.getBeanName()+"Dao\">\n\n");
         StringBuilder sb1 = new StringBuilder();
         StringBuilder sb2 = new StringBuilder();
         StringBuilder sb3 = new StringBuilder();
         StringBuilder sb4 = new StringBuilder();
         StringBuilder sb5 = new StringBuilder();
+
+        StringBuilder sbdao = new StringBuilder();
+
+        String objName = null;
+        if(beanDefine.getGenerateDao()){
+            sbdao.append("\nimport "+beanPackage+"."+beanDefine.getBeanName()+";\n\n");
+            sbdao.append("public interface " + beanDefine.getBeanName() + "Dao{\n\n");
+            objName = getObjName(beanDefine.getBeanName());
+        }
 
         sb1.append("\t<sql id=\"fields\">\n\t\t");
         if(beanDefine.getInsert()){
@@ -76,10 +86,12 @@ public class GenerateCode {
             sb2.append("\t\t(<include refid=\"fields\"/>)\n");
             sb2.append("\t\tvalues\n");
             sb2.append("\t\t(null, ");
+            sbdao.append("\tvoid insert("+beanDefine.getBeanName()+" "+objName+");\n\n");
         }
         if(beanDefine.getUpdate()){
             sb3.append("\t<update id=\"update\" parameterType=\""+beanPackage+"."+beanDefine.getBeanName()+"\">\n");
             sb3.append("\t\tupdate "+beanDefine.getTabName()+" set\n");
+            sbdao.append("\tvoid update("+beanDefine.getBeanName()+" "+objName+");\n\n");
         }
         if(beanDefine.getQuery()){
             sb4.append("\t<select id=\"queryByBaseInfoId\" parameterType=\"long\" resultType=\""+beanPackage+"."+beanDefine.getBeanName()+"\">\n");
@@ -88,6 +100,7 @@ public class GenerateCode {
             sb4.append("\t\tFROM "+beanDefine.getTabName()+"\n");
             sb4.append("\t\tWHERE baseInfoId = #{baseInfoId}\n");
             sb4.append("\t</select>\n");
+            sbdao.append("\t"+beanDefine.getBeanName()+" queryByBaseInfoId(Long baseInfoId);\n\n");
         }
         if(beanDefine.getInsertRecords()){
             sb5.append("\t<insert id=\"insertRecords\" parameterType=\""+beanPackage+"."+beanDefine.getBeanName()+"\">\n");
@@ -96,6 +109,12 @@ public class GenerateCode {
             sb5.append("\t\tvalues\n");
             sb5.append("\t\t<foreach item=\"item\" index=\"index\" collection=\"list\" open=\"(\" separator=\"), (\" close=\")\">\n");
             sb5.append("\t\t\tnull, ");
+            sbdao.insert(0, "import java.util.List;\n\n");
+            sbdao.append("\tvoid insertRecords(List<"+beanDefine.getBeanName()+"> "+objName+"s);\n\n");
+        }
+
+        if(beanDefine.getGenerateDao()){
+            sbdao.append("}");
         }
 
         while (rs.next()) {
@@ -118,21 +137,20 @@ public class GenerateCode {
             }
             if(beanDefine.getUpdate()){
                 if(!fieldName.equals("id") && !fieldName.equals("createDate") && !fieldName.equals("lastUpdateDate")) {
-                    sb3.append("\t\t  "+fieldName+" = #{"+fieldName+", jdbcType="+colType+"},\n");
+                    sb3.append("\t\t  "+fieldName+" = #{"+fieldName+", jdbcType="+changeMybatisType(colType)+"},\n");
                 }
             }
             if(beanDefine.getInsertRecords()){
                 if(!fieldName.equals("id") && !fieldName.equals("createDate") && !fieldName.equals("lastUpdateDate")) {
-                    sb5.append("#{" + fieldName + "}, ");
+                    sb5.append("#{item." + fieldName + "}, ");
                 }
             }
         }
         //mapper
-        sb1.deleteCharAt(sb1.length()-1);
+        sb1.deleteCharAt(sb1.length()-2);
         sb1.append("\n\t</sql>\n");
         mapperBuilder.append(sb1.toString());
         if(beanDefine.getInsert()){
-            sb2.substring(0, sb2.length()-3);
             sb2.append("null ,null )\n");
             sb2.append("\t</insert>\n");
             mapperBuilder.append(sb2.toString()+"\n");
@@ -144,7 +162,7 @@ public class GenerateCode {
             mapperBuilder.append(sb5.toString()+"\n");
         }
         if(beanDefine.getUpdate()){
-            sb3.substring(0, sb3.length()-3);
+            sb3.deleteCharAt(sb3.length()-2);
             sb3.append("\t\twhere id = #{id,jdbcType=BIGINT}\n");
             sb3.append("\t</update>\n");
             mapperBuilder.append(sb3.toString()+"\n");
@@ -154,6 +172,14 @@ public class GenerateCode {
         }
 
         mapperBuilder.append("\n</mapper>");
+        File daoFile = FileUtils.getFileByDirAndName(dirFile, beanDefine.getBeanName()+"Dao.java");
+        BufferedOutputStream daobos = new BufferedOutputStream(new FileOutputStream(daoFile));
+
+        daobos.write(sbdao.toString().getBytes());
+        daobos.flush();
+        daobos.close();
+
+
         File mappFile = FileUtils.getFileByDirAndName(dirFile, beanDefine.getBeanName()+"Mapper.xml");
         BufferedOutputStream mapbos = new BufferedOutputStream(new FileOutputStream(mappFile));
 
@@ -199,5 +225,25 @@ public class GenerateCode {
                 stringBuilder.append("import java.math.BigDecimal;\n");
             }
         }
+    }
+
+    private String changeMybatisType(String colType){
+        String mybatisType = null;
+
+        mybatisType = colType;
+        if("INT".equals(colType)){
+            mybatisType = "INTEGER";
+        }
+        if("DATETIME".equals(colType)){
+            mybatisType = "TIMESTAMP";
+        }
+        if("TEXT".equals(colType)){
+            mybatisType = "VARCHAR";
+        }
+        return mybatisType;
+    }
+    private String getObjName(String beanName){
+        String objName = String.valueOf(beanName.charAt(0)).toLowerCase()+beanName.substring(1);
+        return objName;
     }
 }
