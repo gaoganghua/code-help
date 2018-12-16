@@ -4,6 +4,7 @@ import com.code.help.spider.enums.ParamTypeEnum;
 import com.code.help.spider.enums.WebMethodEnum;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpVersion;
+import org.springframework.util.StringUtils;
 
 import java.util.Map;
 
@@ -14,15 +15,20 @@ public class WebRequest {
 
     private NameValue[] params;
 
-    private ParamTypeEnum paramType;
+    private ParamTypeEnum paramType = ParamTypeEnum.STRING;
 
     private WebMethodEnum method = WebMethodEnum.GET;
 
     private Cookie cookie;
 
-    private HttpVersion version;
+    private String charset = "UTF-8";
 
-    private String charset;
+    public WebRequest() {
+    }
+
+    public WebRequest(String url) {
+        this.url = url;
+    }
 
     public String getUrl() {
         return url;
@@ -64,14 +70,6 @@ public class WebRequest {
         this.cookie = cookie;
     }
 
-    public HttpVersion getVersion() {
-        return version;
-    }
-
-    public void setVersion(HttpVersion version) {
-        this.version = version;
-    }
-
     public String getCharset() {
         return charset;
     }
@@ -86,6 +84,20 @@ public class WebRequest {
 
     public void setParamType(ParamTypeEnum paramType) {
         this.paramType = paramType;
+    }
+
+    public void addHeader(String name, String value) {
+        if (StringUtils.isEmpty(name)) {
+            return;
+        }
+        headers.put(name, value);
+    }
+
+    public String getHeader(String name) {
+        if (StringUtils.isEmpty(name)) {
+            return null;
+        }
+        return headers.get(name);
     }
 
 }

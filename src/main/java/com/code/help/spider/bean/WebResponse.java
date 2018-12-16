@@ -2,6 +2,8 @@ package com.code.help.spider.bean;
 
 import com.code.help.spider.util.IOUtils;
 import org.apache.commons.httpclient.Cookie;
+import org.apache.commons.httpclient.StatusLine;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,7 +12,7 @@ import java.util.Map;
 public class WebResponse {
     private int stateCode;
 
-    private String stateLine;
+    private StatusLine statusLine;
 
     private Cookie cookie;
 
@@ -20,6 +22,8 @@ public class WebResponse {
 
     private String body;
 
+    private String charset;
+
     public int getStateCode() {
         return stateCode;
     }
@@ -28,12 +32,12 @@ public class WebResponse {
         this.stateCode = stateCode;
     }
 
-    public String getStateLine() {
-        return stateLine;
+    public StatusLine getStatusLine() {
+        return statusLine;
     }
 
-    public void setStateLine(String stateLine) {
-        this.stateLine = stateLine;
+    public void setStatusLine(StatusLine statusLine) {
+        this.statusLine = statusLine;
     }
 
     public Cookie getCookie() {
@@ -61,15 +65,26 @@ public class WebResponse {
     }
 
     public String getBody() throws IOException {
+        if (!StringUtils.isEmpty(body)) {
+            return body;
+        }
         try {
-            return IOUtils.parseStream(this.getStream());
+            body = IOUtils.parseStream(this.getStream(), charset);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-        return null;
+        return body;
     }
 
     public void setBody(String body) {
         this.body = body;
+    }
+
+    public String getCharset() {
+        return charset;
+    }
+
+    public void setCharset(String charset) {
+        this.charset = charset;
     }
 }

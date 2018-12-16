@@ -6,7 +6,7 @@ import javax.annotation.PostConstruct;
 
 @Component
 public class SpiderExecutor {
-    @PostConstruct
+    //@PostConstruct
     public void execute(){
         System.out.println("start spider request...");
     }

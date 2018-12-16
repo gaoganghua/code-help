@@ -2,13 +2,14 @@ package com.code.help.spider.bean;
 
 import com.code.help.spider.enums.ParamTypeEnum;
 import org.apache.commons.httpclient.*;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.*;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.FilePartSource;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
+import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.params.HttpMethodParams;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.*;
@@ -26,60 +27,92 @@ public class WebClient {
 
     private HttpClient client;
 
-    private int timeout;
+    private HttpClientParams hostParams;
+
+    private ProxyHost proxyHost;
+
+    private Long timeout = 2L;
 
     public WebClient() {
         init();
     }
 
-    public WebClient(HttpClient client) {
-        this.client = client;
+    public void build(Long timeout) {
+        this.timeout = timeout;
+    }
+
+    public void build(HttpVersion version) {
+        this.httpVersion = version;
+    }
+
+    public void build(String proxyHost, int port) {
+        this.proxyHost = new ProxyHost(proxyHost, port);
     }
 
     public void init() {
-        client = new HttpClient();
-        HostConfiguration conf = new HostConfiguration();
-//        conf.setHost("localhost");
-//        client.getHostConfiguration().setProxy("localhost", 8888);
+        this.client = new HttpClient();
+        buildHostParams();
+        buildHostConfiguration();
     }
 
-    public void init(int timeout) {
-        client = new HttpClient();
-        client.getParams().setSoTimeout(timeout);
+    private void buildHostParams() {
+        if (hostParams == null) {
+            client.getParams().setParameter(HttpClientParams.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
+//        params.setParameter(HttpClientParams.SO_TIMEOUT, timeout);
+        } else {
+            client.setParams(hostParams);
+        }
     }
 
-    public void init(int timeout, HostConfiguration conf) {
-        client = new HttpClient();
-        client.getParams().setSoTimeout(timeout);
-        client.setHostConfiguration(conf);
+    private void buildHostConfiguration() {
+        if (hostConf == null) {
+            client.getHostConfiguration().setHost("127.0.0.1");
+            client.getHostConfiguration().setProxyHost(proxyHost);
+        } else {
+            client.setHostConfiguration(hostConf);
+        }
     }
 
     public WebResponse execute(WebRequest request) throws IOException {
-        HttpMethod method = convert(request);
-        fillHeaders(method, request);
+        buildProxyHost();
+        HttpMethod method = buildMethod(request);
+        buildHeaders(method, request);
 
-        System.out.println(method == null);
-        System.out.println(client == null);
         this.client.executeMethod(method);
-        WebResponse response = build(method);
+        WebResponse response = buildResponse(method);
         return response;
     }
 
-    private HttpMethod convert(WebRequest request) throws UnsupportedEncodingException, FileNotFoundException {
+
+    private HttpMethod buildMethod(WebRequest request) throws UnsupportedEncodingException, FileNotFoundException {
         HttpMethod method = null;
         switch (request.getMethod().getValue()) {
             case "get":
-                method = new GetMethod();
+                method = new GetMethod(request.getUrl());
                 break;
             case "post":
-                method = new PostMethod();
+                method = new PostMethod(request.getUrl());
                 dealPostMethodParams(method, request);
                 break;
             case "options":
-                method = new OptionsMethod();
+                method = new OptionsMethod(request.getUrl());
                 break;
             default:
-                method = new GetMethod();
+                method = new GetMethod(request.getUrl());
+        }
+
+        if (StringUtils.isEmpty(request.getCharset())) {
+            method.getParams().setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, "UTF-8");
+            method.getParams().setParameter(HttpMethodParams.HTTP_ELEMENT_CHARSET, "UTF-8");
+        } else {
+            method.getParams().setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, request.getCharset());
+            method.getParams().setParameter(HttpMethodParams.HTTP_ELEMENT_CHARSET, request.getCharset());
+        }
+        //填充httpMethodParamter参数
+        if (request.getParams() != null) {
+            for (NameValue nameValue : request.getParams()) {
+                method.getParams().setParameter(nameValue.getName(), nameValue.getValue());
+            }
         }
 
         return method;
@@ -87,11 +120,7 @@ public class WebClient {
 
     private void dealPostMethodParams(HttpMethod method, WebRequest request) throws UnsupportedEncodingException, FileNotFoundException {
         PostMethod postMethod = (PostMethod) method;
-        if (StringUtils.isEmpty(request.getCharset())) {
-            ((PostMethod) method).setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, "UTF-8");
-        } else {
-            ((PostMethod) method).setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, request.getCharset());
-        }
+
         //两种方法作用相同
 //        ((PostMethod) method).addParameters(request.getMethodParams());
 //        ((PostMethod) method).setRequestBody();
@@ -125,7 +154,7 @@ public class WebClient {
         postMethod.setRequestEntity(requestEntity);
     }
 
-    private void fillHeaders(HttpMethod method, WebRequest request) {
+    private void buildHeaders(HttpMethod method, WebRequest request) {
         Map<String, String> headers = request.getHeaders();
 
         if (headers == null || !headers.containsKey("User-Agent")) {
@@ -143,6 +172,12 @@ public class WebClient {
         if (headers == null || !headers.containsKey("Connection")) {
             method.addRequestHeader("Connection", "keep-alive");
         }
+        if (headers == null || !headers.containsKey("Pragma")) {
+            method.addRequestHeader("Pragma", "no-cache");
+        }
+        if (headers == null || !headers.containsKey("Cache-Control")) {
+            method.addRequestHeader("Cache-Control", "no-cache");
+        }
 
         if (headers != null && headers.size() > 0) {
             for (Map.Entry<String, String> entry : headers.entrySet()) {
@@ -151,12 +186,18 @@ public class WebClient {
         }
     }
 
-    private WebResponse build(HttpMethod method) throws IOException {
+    public void buildProxyHost(){
+
+    }
+
+    private WebResponse buildResponse(HttpMethod method) throws IOException {
         WebResponse response = new WebResponse();
         response.setStateCode(method.getStatusCode());
-        response.setStateLine(method.getStatusLine().toString());
+        response.setStatusLine(method.getStatusLine());
         response.setHeaders(processHeaders(method.getResponseHeaders()));
-        response.setStream(processStream(method.getResponseBodyAsStream(), method.getResponseHeaders()));
+//        response.setCookie(method.getResponseHeader("cookie"));
+        response.setStream(processStream(method.getResponseBodyAsStream(), method.getResponseHeader("Content-Encoding")));
+        response.setCharset((String) method.getParams().getParameter(HttpMethodParams.HTTP_CONTENT_CHARSET));
 
         return response;
     }
@@ -172,14 +213,14 @@ public class WebClient {
         return mapheaders;
     }
 
-    private InputStream processStream(InputStream stream, Header[] headers) throws IOException {
+    private InputStream processStream(InputStream stream, Header header) throws IOException {
         String encoding = null;
-        InputStream resultStream = stream;
-        for (int i = 0; i < headers.length; i++) {
-            if (headers[i].getName() == "Content-Encoding") {
-                encoding = headers[i].getValue();
-            }
+        if (header == null) {
+            return new BufferedInputStream(stream);
         }
+        encoding = header.getValue();
+        InputStream resultStream = stream;
+
         if (!StringUtils.isEmpty(encoding)) {
             if ("gzip".equals(encoding) || "zip".equals(encoding)) {
                 GZIPInputStream gzin = new GZIPInputStream(stream);
@@ -188,8 +229,8 @@ public class WebClient {
                 DeflaterInputStream dis = new DeflaterInputStream(stream);
                 resultStream = new BufferedInputStream(dis);
             }
-
         }
         return resultStream;
     }
+
 }
