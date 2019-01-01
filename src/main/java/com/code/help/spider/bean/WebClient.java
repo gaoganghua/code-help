@@ -1,6 +1,8 @@
 package com.code.help.spider.bean;
 
 import com.code.help.spider.enums.ParamTypeEnum;
+import com.code.help.spider.util.ClientUtils;
+import com.code.help.util.PatternUtils;
 import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.*;
@@ -10,8 +12,11 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
+import javax.xml.xpath.XPathExpressionException;
 import java.io.*;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -21,9 +26,6 @@ import java.util.zip.DeflaterInputStream;
 import java.util.zip.GZIPInputStream;
 
 public class WebClient {
-    private HttpVersion httpVersion = HttpVersion.HTTP_1_1;
-
-    private HostConfiguration hostConf;
 
     private HttpClient client;
 
@@ -33,53 +35,77 @@ public class WebClient {
 
     private Long timeout = 2L;
 
+    private Boolean needProxy = true;
+
+    private Logger logger = LoggerFactory.getLogger(WebClient.class);
+
     public WebClient() {
-        init();
     }
 
     public void build(Long timeout) {
         this.timeout = timeout;
     }
 
-    public void build(HttpVersion version) {
-        this.httpVersion = version;
+    public void build(Boolean needProxy) {
+        this.needProxy = needProxy;
     }
 
     public void build(String proxyHost, int port) {
         this.proxyHost = new ProxyHost(proxyHost, port);
     }
 
-    public void init() {
+    public WebClient init() {
         this.client = new HttpClient();
-        buildHostParams();
-        buildHostConfiguration();
+
+        try {
+            buildHostParams();
+            buildHostConfiguration();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+
+        return this;
     }
 
     private void buildHostParams() {
         if (hostParams == null) {
             client.getParams().setParameter(HttpClientParams.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
-//        params.setParameter(HttpClientParams.SO_TIMEOUT, timeout);
+//            client.getParams().setParameter(HttpClientParams.SO_TIMEOUT, );
         } else {
             client.setParams(hostParams);
         }
     }
 
-    private void buildHostConfiguration() {
-        if (hostConf == null) {
-            client.getHostConfiguration().setHost("127.0.0.1");
-            client.getHostConfiguration().setProxyHost(proxyHost);
-        } else {
-            client.setHostConfiguration(hostConf);
+    private void buildHostConfiguration() throws InterruptedException, XPathExpressionException, IOException {
+        if (needProxy == false) {
+            return;
         }
+
+        if (proxyHost == null) {
+            String proxyUrl = ClientUtils.getProxyAddress();
+
+            String[] proxys = proxyUrl.split(":");
+            logger.info("proxy address:{}, port:{}", proxys[0], proxys[1]);
+            if (proxys != null && proxys.length >= 2) {
+                proxyHost = new ProxyHost(proxys[0], Integer.parseInt(proxys[1]));
+            }
+        }
+
+        client.getHostConfiguration().setProxyHost(proxyHost);
     }
 
-    public WebResponse execute(WebRequest request) throws IOException {
-        buildProxyHost();
-        HttpMethod method = buildMethod(request);
-        buildHeaders(method, request);
+    public WebResponse execute(WebRequest request) {
+        WebResponse response = null;
+        try {
+            HttpMethod method = buildMethod(request);
+            buildHeaders(method, request);
+            buildMethodParams(method, request);
 
-        this.client.executeMethod(method);
-        WebResponse response = buildResponse(method);
+            this.client.executeMethod(method);
+            response = buildResponse(method);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
         return response;
     }
 
@@ -101,20 +127,6 @@ public class WebClient {
                 method = new GetMethod(request.getUrl());
         }
 
-        if (StringUtils.isEmpty(request.getCharset())) {
-            method.getParams().setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, "UTF-8");
-            method.getParams().setParameter(HttpMethodParams.HTTP_ELEMENT_CHARSET, "UTF-8");
-        } else {
-            method.getParams().setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, request.getCharset());
-            method.getParams().setParameter(HttpMethodParams.HTTP_ELEMENT_CHARSET, request.getCharset());
-        }
-        //填充httpMethodParamter参数
-        if (request.getParams() != null) {
-            for (NameValue nameValue : request.getParams()) {
-                method.getParams().setParameter(nameValue.getName(), nameValue.getValue());
-            }
-        }
-
         return method;
     }
 
@@ -127,7 +139,7 @@ public class WebClient {
         RequestEntity requestEntity = null;
         if (ParamTypeEnum.STRING.equals(request.getParamType())) {
             StringBuffer params = new StringBuffer();
-            for (NameValue nameValue : request.getParams()) {
+            for (NameValue nameValue : request.getReqParams()) {
                 params.append(nameValue.getName() + "=" + String.valueOf(nameValue.getValue()));
                 params.append("&");
             }
@@ -135,7 +147,7 @@ public class WebClient {
             requestEntity = new StringRequestEntity(params.toString(), null, "UTF-8");
         } else if (ParamTypeEnum.BYTEARRAY.equals(request.getParamType())) {
             StringBuffer params = new StringBuffer();
-            for (NameValue nameValue : request.getParams()) {
+            for (NameValue nameValue : request.getReqParams()) {
                 params.append(nameValue.getName() + "=" + String.valueOf(nameValue.getValue()));
                 params.append("&");
             }
@@ -143,7 +155,7 @@ public class WebClient {
             requestEntity = new ByteArrayRequestEntity(params.toString().getBytes("UTF-8"));
         } else if (ParamTypeEnum.MULTIPART.equals(request.getParamType())) {
             List<Part> parts = new LinkedList<>();
-            for (NameValue nameValue : request.getParams()) {
+            for (NameValue nameValue : request.getReqParams()) {
                 if (nameValue.getValue() instanceof File) {
                     parts.add(new FilePart(nameValue.getName(), new FilePartSource((File) nameValue.getValue())));
                 } else {
@@ -184,9 +196,31 @@ public class WebClient {
                 method.addRequestHeader(entry.getKey(), entry.getValue());
             }
         }
+        if (StringUtils.isEmpty(request.getUrl())) {
+            String reqHost = PatternUtils.groupOne(request.getUrl(), "://(^[/]+)/", 1);
+        }
+
+        method.addRequestHeader("Cookie", request.getCookie());
     }
 
-    public void buildProxyHost(){
+    private void buildMethodParams(HttpMethod method, WebRequest request) {
+        if (!request.getHttpVersion().equals(HttpVersion.HTTP_1_1)) {
+            method.getParams().setParameter(HttpMethodParams.PROTOCOL_VERSION, request.getHttpVersion());
+        }
+
+        if (StringUtils.isEmpty(request.getCharset())) {
+            method.getParams().setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, "UTF-8");
+            method.getParams().setParameter(HttpMethodParams.HTTP_ELEMENT_CHARSET, "UTF-8");
+        } else {
+            method.getParams().setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, request.getCharset());
+            method.getParams().setParameter(HttpMethodParams.HTTP_ELEMENT_CHARSET, request.getCharset());
+        }
+        //填充httpMethodParamter参数
+        if (request.getMethodParams() != null) {
+            for (Map.Entry<String, Object> entry : request.getMethodParams().entrySet()) {
+                method.getParams().setParameter(entry.getKey(), entry.getValue());
+            }
+        }
 
     }
 

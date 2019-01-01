@@ -1,0 +1,67 @@
+import com.gxb.basisdata.minterm.util.BeanUtils;
+import com.gxb.crawler.bean.User;
+import com.gxb.crawler.service.api.CrawlerDataQueryService;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class #{value}ManagerImpl implements #{value}Manager {
+    private static final Logger logger = LoggerFactory.getLogger(#{value}ManagerImpl.class);
+    @Autowired
+    private #{value}Dao #{value_name}Dao;
+    @Autowired
+    private CrawlerDataQueryService crawlerDataQueryService;
+
+    @Override
+    public void buildAndSave(#{value}RDM #{value_name}RDM, Long baseInfoId, Long userId, String token) {
+        #{value} #{value_name} = #{value_name}Dao.queryByBaseInfoId(baseInfoId);
+
+        if (#{value_name} == null) {
+            #{value_name} = new #{value}();
+            BeanUtils.copyProperties(#{value_name}RDM, #{value_name});
+            #{value_name}.setBaseInfoId(baseInfoId);
+            #{value_name}.setStatus(debitStatus(#{value_name}, userId));
+            #{value_name}Dao.insert(#{value_name});
+            logger.info("#{value}ManagerImpl buildAndSave insert success token:{}", token);
+        } else {
+            Long oldId = #{value_name}.getId();
+            BeanUtils.copyProperties(#{value_name}RDM, #{value_name});
+            #{value_name}.setBaseInfoId(baseInfoId);
+            #{value_name}.setId(oldId);
+            #{value_name}.setStatus(debitStatus(#{value_name}, userId));
+            #{value_name}Dao.update(#{value_name});
+            logger.info("#{value}ManagerImpl buildAndSave update success token:{}", token);
+        }
+    }
+
+    @Override
+    public #{value} queryByBaseInfoId(Long baseInfoId) {
+        return #{value_name}Dao.queryByBaseInfoId(baseInfoId);
+    }
+
+    /**
+     * 返回 0非本人 1是本人
+     *
+     * @return 0非本人 1是本人
+     */
+    private boolean debitStatus(#{value} #{value_name}, Long userId) {
+        //查询用户三要素信息
+        User user = crawlerDataQueryService.queryUserByUserId(userId);
+        logger.info("是否本人判断  查询到的User 信息 userId:{},name:{},idCard:{},idCardEnc:{},userPhone:{}", user.getId(), user.getName(), user.getIdcard(), user.getEncryptedIdcard(), user.getPhone());
+
+        String debitName = #{value_name}.getRealName();
+        String debitIdCard = #{value_name}.getIdCard();
+        logger.info("是否本人判断  输入参数为debitName:{},debitIdCard:{},userName:{},userIdCard", debitName, debitIdCard, user.getName(), user.getIdcard());
+        if (StringUtils.isBlank(debitName) || StringUtils.isBlank(debitIdCard)) {
+            return false;
+        }
+        if (debitName.equals(user.getName()) && debitIdCard.equals(user.getIdcard())) {
+            return true;
+        }
+        return false;
+    }
+
+}

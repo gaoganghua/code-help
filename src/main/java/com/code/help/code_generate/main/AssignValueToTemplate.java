@@ -6,29 +6,26 @@ import com.code.help.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Component
 public class AssignValueToTemplate {
-    final static String FILENAME = "generate/template.txt";
+    final static String FILENAME = "generate/templateSingle.txt";
     Logger logger = LoggerFactory.getLogger(AssignValueToTemplate.class);
 
     @Autowired
     private TemplateBean templateBean;
 
     public void assignValue() throws IOException {
-        File templateFile = FileUtils.getFileByName(templateBean.getFileName(), FILENAME);
+        File templateFile = FileUtils.getFileInResource(templateBean.getFileName(), FILENAME);
         logger.info("template file:{}", templateFile.getAbsolutePath());
         generagteByTemplate(templateFile);
     }

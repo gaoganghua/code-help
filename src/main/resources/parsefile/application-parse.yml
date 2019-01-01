@@ -1,0 +1,6 @@
+parserbean:
+  type: excel
+  filePath: /Users/chancelee/Desktop/test.xls
+
+
+

@@ -4,8 +4,7 @@ generatebean:
 
 template-bean:
   assignValue:
-    - 11
-    - 22
-    - 33
+    - DirectJdb
+  suffixName: ManagerImpl
   targetDir:
-    /Users/chancelee/Desktop
+    /Users/chancelee/Desktop/DEFAULT/generate

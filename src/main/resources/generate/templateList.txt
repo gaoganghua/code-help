@@ -1,0 +1,81 @@
+import com.gxb.basisdata.minterm.util.BeanUtils;
+import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+
+@Service
+public class #{value}ManagerImpl implements #{value}Manager {
+    private static final Logger logger = LoggerFactory.getLogger(#{value}ManagerImpl.class);
+    @Autowired
+    private #{value}Dao #{value_name}Dao;
+
+
+    @Override
+    public void buildAndSave(List<#{value}RDM> #{value_name}RDMS, Long baseInfoId, String token) {
+        if (CollectionUtils.isEmpty(#{value_name}RDMS) || baseInfoId == null) {
+            logger.error("#{value}ManagerImpl,buildAndSave,输入参数异常,#{value_name}RDMS size:{},baseInfoId:{}", #{value_name}RDMS == null ? null : #{value_name}RDMS.size(), baseInfoId);
+            throw new IllegalArgumentException("参数异常");
+        }
+
+        List<#{value}> oldList = #{value_name}Dao.queryByBaseInfoId(baseInfoId);
+
+        Map<String, #{value}> rdmMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(oldList)) {
+            for (#{value} #{value_name} : oldList) {
+                rdmMap.put(#{value_name}.getAuthName(), #{value_name});
+            }
+        }
+
+        List<#{value}> updateList = new ArrayList<>();
+        List<#{value}> insertList = new ArrayList<>();
+
+        for (#{value}RDM item : #{value_name}RDMS) {
+            #{value} #{value_name} = rdmMap.get(item.getAuthName());
+            if (#{value_name} == null) {
+                #{value_name} = new #{value}();
+                BeanUtils.copyProperties(item, #{value_name});
+                #{value_name}.setBaseInfoId(baseInfoId);
+                insertList.add(#{value_name});
+            } else {
+                if (isChange(item, #{value_name})) {
+                    Long oldId = #{value_name}.getId();
+                    BeanUtils.copyProperties(item, #{value_name});
+                    #{value_name}.setId(oldId);
+                    #{value_name}.setBaseInfoId(baseInfoId);
+                    updateList.add(#{value_name});
+                }
+
+            }
+        }
+
+        if (CollectionUtils.isNotEmpty(updateList)) {
+            for (#{value} order : updateList) {
+                #{value_name}Dao.update(order);
+            }
+            logger.info("#{value}ManagerImpl,buildAndSave,update list success token:{},updateList size:{},baseInfoId:{}", token, updateList.size(), baseInfoId);
+        }
+
+        if (CollectionUtils.isNotEmpty(insertList)) {
+            #{value_name}Dao.insertRecords(insertList);
+            logger.info("#{value}ManagerImpl,buildAndSave,insert list success token:{},insert size:{},baseInfoId:{}", token, insertList.size(), baseInfoId);
+        }
+
+
+    }
+
+    @Override
+    public List<#{value}> queryByBaseInfoId(Long baseInfoId) {
+        return #{value_name}Dao.queryByBaseInfoId(baseInfoId);
+    }
+
+
+    private boolean isChange(#{value}RDM #{value_name}RDM, #{value} #{value_name}) {
+
+
+        return false;
+    }
+}

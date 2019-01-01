@@ -1,2 +1,12 @@
-aaa#{value}bb,
-#{value}cccc;
+import com.gxb.basisdata.minterm.debit.dao.domain.jdb.#{value};
+import com.gxb.basisdata.minterm.debit.service.rawdata.model.jdb.#{value};
+
+import java.util.List;
+
+public interface #{value}Manager {
+
+    void buildAndSave(List<#{value}RDM> #{value_name}RDMS, Long baseInfoId, String token);
+
+    List<#{value}> queryByBaseInfoId(Long baseInfoId);
+
+}

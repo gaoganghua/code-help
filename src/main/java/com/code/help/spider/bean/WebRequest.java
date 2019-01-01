@@ -6,6 +6,9 @@ import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpVersion;
 import org.springframework.util.StringUtils;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 public class WebRequest {
@@ -13,15 +16,19 @@ public class WebRequest {
 
     private Map<String, String> headers;
 
-    private NameValue[] params;
+    private List<NameValue> reqParams;
+
+    private Map<String, Object> methodParams;
 
     private ParamTypeEnum paramType = ParamTypeEnum.STRING;
 
     private WebMethodEnum method = WebMethodEnum.GET;
 
-    private Cookie cookie;
+    private String cookie;
 
     private String charset = "UTF-8";
+
+    private HttpVersion httpVersion = HttpVersion.HTTP_1_1;
 
     public WebRequest() {
     }
@@ -46,12 +53,30 @@ public class WebRequest {
         this.headers = headers;
     }
 
-    public NameValue[] getParams() {
-        return params;
+    public List<NameValue> getReqParams() {
+        return reqParams;
     }
 
-    public void setParams(NameValue[] params) {
-        this.params = params;
+    public void addReqParams(String paramName, Object paramValue) {
+        if (StringUtils.isEmpty(paramName)) {
+            return;
+        }
+        if (reqParams == null) {
+            reqParams = new LinkedList<>();
+        }
+        this.reqParams.add(new NameValue(paramName, paramValue));
+    }
+
+    public void setReqParams(List<NameValue> reqParams) {
+        this.reqParams = reqParams;
+    }
+
+    public Map<String, Object> getMethodParams() {
+        return methodParams;
+    }
+
+    public void setMethodParams(Map<String, Object> methodParams) {
+        this.methodParams = methodParams;
     }
 
     public WebMethodEnum getMethod() {
@@ -62,11 +87,11 @@ public class WebRequest {
         this.method = method;
     }
 
-    public Cookie getCookie() {
+    public String getCookie() {
         return cookie;
     }
 
-    public void setCookie(Cookie cookie) {
+    public void setCookie(String cookie) {
         this.cookie = cookie;
     }
 
@@ -82,6 +107,14 @@ public class WebRequest {
         return paramType;
     }
 
+    public HttpVersion getHttpVersion() {
+        return httpVersion;
+    }
+
+    public void setHttpVersion(HttpVersion httpVersion) {
+        this.httpVersion = httpVersion;
+    }
+
     public void setParamType(ParamTypeEnum paramType) {
         this.paramType = paramType;
     }
@@ -90,6 +123,10 @@ public class WebRequest {
         if (StringUtils.isEmpty(name)) {
             return;
         }
+        if (headers == null) {
+            headers = new HashMap<>();
+        }
+
         headers.put(name, value);
     }
 

@@ -6,13 +6,23 @@ hikari:
 
 tablemapping:
   beanDefines:
-    #如果List里面是对象类型需要加空格
-    - tabName: t_debit_yxb_risk_info
-      beanName: RiskInfo
-    - tabName: t_debit_yxb_contacts_info
-      beanName: ContactsInfo
+  #如果List里面是对象类型需要加空格
+#      - tabName: t_debit_hhd_base_info
+#        beanName: HhdBaseInfo
+#      - tabName: t_debit_hhd_load_info
+#        beanName: HhdLoadInfo
+#      - tabName: t_debit_jdb_info
+#        beanName: JdbInfo
+#      - tabName: t_debit_jdb_auth
+#        beanName: JdbAuthInfo
+#        insertRecords: true
+#      - tabName: t_debit_jdb_contact
+#        beanName: JdbContactInfo
+#        insertRecords: true
+      - tabName: t_debit_direct_jdb_info
+        beanName: DirectJdbInfo
   daoPackage: com.gxb.basisdata.minterm.debit.dao
-  beanPackage: com.gxb.bean
+  beanPackage: com.gxb.basisdata.minterm.debit.dao.domain
 
 
 

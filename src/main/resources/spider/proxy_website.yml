@@ -1,0 +1,6 @@
+proxy_url:
+  - http://www.xicidaili.com/nn/
+  - https://proxy.mimvp.com/free.php
+
+#users:
+#  - {id: 1,name: 张三,age: 12}

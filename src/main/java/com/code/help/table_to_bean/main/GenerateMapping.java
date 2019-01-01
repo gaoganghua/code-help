@@ -25,7 +25,7 @@ public class GenerateMapping {
     private final String DEFAULT_DIR = "/Users/chancelee/Desktop/DEFAULT/table_bean";
 
     public void generate() throws SQLException, IOException, ClassNotFoundException {
-        File dirFile = FileUtils.getFileByNameNew(tableMapping.getTargetDir(), DEFAULT_DIR);
+        File dirFile = FileUtils.getFileByName(tableMapping.getTargetDir(), DEFAULT_DIR);
         String daoPackage = tableMapping.getDaoPackage();
         String beanPackage = tableMapping.getBeanPackage();
 

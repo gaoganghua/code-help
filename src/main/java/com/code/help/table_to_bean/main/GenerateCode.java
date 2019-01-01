@@ -28,12 +28,12 @@ public class GenerateCode {
     @Autowired
     private TableMapping tableMapping;
 
-    private final String DEFAULT_DIR = "/Users/chancelee/Desktop";
+    private final String DEFAULT_DIR = "/Users/chancelee/Desktop/DEFAULT/table_bean";
 
     private final String queryName = "queryByBaseInfoId";
 
     public void generate() throws SQLException, IOException, ClassNotFoundException {
-        File dirFile = FileUtils.getFileByNameNew(tableMapping.getTargetDir(), DEFAULT_DIR);
+        File dirFile = FileUtils.getFileByName(tableMapping.getTargetDir(), DEFAULT_DIR);
         String daoPackage = tableMapping.getDaoPackage();
         String beanPackage = tableMapping.getBeanPackage();
 
