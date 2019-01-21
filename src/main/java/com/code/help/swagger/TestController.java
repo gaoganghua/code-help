@@ -12,7 +12,7 @@ public class TestController {
     @RequestMapping(value = "get", method = RequestMethod.GET)
     @ResponseBody
     @ApiOperation(value="根据id获取用户json", notes="返回用户的json")
-    @ApiImplicitParam(paramType="query", name = "id", value = "用户编号", required = true, dataType = "Integer")
+    @ApiImplicitParam(paramType="query", name = "id", value = "用户编号", required = true, dataType = "integer")
     public String get(@RequestParam(required = true) Integer id){
         return JSON.toJSONString(new User(id, "test"));
     }
@@ -22,7 +22,10 @@ public class TestController {
     @ApiImplicitParams({
             @ApiImplicitParam(paramType="query", name = "score", value = "用户分数", required = true, dataType = "double")
     })
-    @ApiResponse(code = 200, message = "ok", response = User.class)
+    @ApiResponses({
+            @ApiResponse(code = 404, message = "请求路径路径有误"),
+            @ApiResponse(code = 200, message = "ok", response = User.class)
+    })
     public String get(@RequestParam(required = true) double score, @RequestBody(required = true)User user){
         if(score>60){
             user.setName(user.getName()+"-ok");
