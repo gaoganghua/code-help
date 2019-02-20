@@ -4,6 +4,7 @@ import com.code.help.table_to_bean.bean.BeanDefine;
 import com.code.help.table_to_bean.bean.TableMapping;
 import com.code.help.table_to_bean.enums.TypeMappingEnum;
 import com.code.help.util.FileUtils;
+import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -23,7 +24,7 @@ import java.util.Map;
 
 @Component
 public class GenerateCode {
-    @Autowired
+    @Autowired(required = false)
     private DataSource dataSource;
     @Autowired
     private TableMapping tableMapping;
@@ -33,6 +34,10 @@ public class GenerateCode {
     private final String queryName = "queryByBaseInfoId";
 
     public void generate() throws SQLException, IOException, ClassNotFoundException {
+        if(dataSource==null){
+            return ;
+        }
+        System.out.println("tabletobean start....");
         File dirFile = FileUtils.getFileByName(tableMapping.getTargetDir(), DEFAULT_DIR);
         String daoPackage = tableMapping.getDaoPackage();
         String beanPackage = tableMapping.getBeanPackage();

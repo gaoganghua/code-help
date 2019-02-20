@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties(prefix = "parserbean")
-@PropertySource(value = "parsefile/application-parse.yml")
+@PropertySource(value = {"parsefile/application-parse.yml"})
 public class ParserBean {
     private ParserTypeEnums type;
 

@@ -1,5 +1,6 @@
 package com.code.help.util;
 
+import com.alibaba.fastjson.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -76,6 +77,27 @@ public class FileUtils {
         return file;
     }
 
+    /**
+     * @param path
+     * @return
+     * @throws IOException
+     */
+    public static byte[] readBytesByFile(String path) throws IOException {
+        if (StringUtils.isEmpty(path)) {
+            return null;
+        }
+        File file = new File(path);
+
+        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(path));
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int n = 0;
+        byte[] bus = new byte[2048];
+        while ((n = bis.read(bus)) != -1) {
+            baos.write(bus, 0, n);
+        }
+        return baos.toByteArray();
+    }
+
     public static File getFileByName(String path) throws IOException {
         return getFileByNameNew(path, null, false);
     }
@@ -120,6 +142,17 @@ public class FileUtils {
     public static void writeFileByString(File file, String outStr) throws IOException {
         BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
         bos.write(outStr.getBytes("UTF-8"));
+        bos.flush();
+        bos.close();
+    }
+
+    public static void writeFileByBytes(String path, byte[] bytes) throws IOException {
+        File file = new File(path);
+        if (!file.exists()) {
+            file.createNewFile();
+        }
+        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(path));
+        bos.write(bytes);
         bos.flush();
         bos.close();
     }

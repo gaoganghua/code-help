@@ -17,9 +17,9 @@ public class ExecutorMain {
     //需要一个非参的方法
     @PostConstruct
     public void main() throws ClassNotFoundException, SQLException, IOException {
-        System.out.println("tabletobean start....");
-        generateCode.generate();
-//        mapping.generate();
+
+        generateCode.generate();//生成相关文件
+//        mapping.generate();生成映射文档
     }
 
 }

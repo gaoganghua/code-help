@@ -83,7 +83,7 @@ public class Test {
 
     @org.junit.Test
     public void test2() throws IOException {
-        String filepath = "/Users/chancelee/Desktop/DEFAULT/aa.txt";
+        String filepath = "/Users/chancelee/Desktop/DEFAULT/aa.TestGit";
         Map<String, String> maps = new HashMap<>();
         BufferedReader stream = new BufferedReader(new InputStreamReader(new FileInputStream(filepath)));
         StringBuffer result = new StringBuffer();
