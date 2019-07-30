@@ -1,14 +1,11 @@
 package com.code.help.thread_test;
 
-import org.assertj.core.util.Preconditions;
 import org.junit.Test;
-import scala.util.parsing.combinator.testing.Str;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class ComplatableFuture {

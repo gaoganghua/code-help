@@ -3,26 +3,15 @@ package com.code.help.web_driver;
 import com.code.help.spider.bean.WebClient;
 import com.code.help.spider.bean.WebRequest;
 import com.code.help.spider.bean.WebResponse;
-import com.oracle.tools.packager.IOUtils;
-import com.sun.org.apache.xml.internal.serializer.utils.Utils;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.params.HostParams;
-import org.apache.commons.httpclient.params.HttpClientParams;
-import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.http.client.params.CookiePolicy;
 import org.junit.Test;
-import org.mockito.internal.util.io.IOUtil;
 
 import java.io.*;
-import java.util.zip.DeflaterInputStream;
 import java.util.zip.GZIPInputStream;
 
 public class httprequest {

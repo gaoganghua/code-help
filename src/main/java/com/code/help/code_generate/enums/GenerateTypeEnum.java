@@ -1,7 +1,5 @@
 package com.code.help.code_generate.enums;
 
-import com.sun.tools.javah.Gen;
-
 import java.util.List;
 
 public enum GenerateTypeEnum {
